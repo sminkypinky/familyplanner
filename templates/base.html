@@ -1,0 +1,39 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Family Planner{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div id="status-bar">
+        <div>
+            <button id="go-to-today">Go to Today</button>
+            <input type="file" id="csv-file" accept=".csv" style="display: none;">
+            <button id="import-csv">Import CSV</button>
+        </div>
+        <div id="spinner"></div>
+    </div>
+    
+    <div id="content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <div id="statsModal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Schedule Statistics</h2>
+            <div id="statsContent"></div>
+        </div>
+    </div>
+    
+    <div id="footer">
+        &copy; 2024 Family Planner
+    </div>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>
