@@ -7,12 +7,32 @@ from sqlalchemy.orm import relationship
 from datetime import datetime, timedelta
 import csv
 import io
+import logging
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', '').replace('postgres://', 'postgresql://')
+
+# Configure logging
+app.logger.addHandler(logging.StreamHandler(sys.stdout))
+app.logger.setLevel(logging.ERROR)
+
+# Database configuration
+database_url = os.environ.get('DATABASE_URL')
+if database_url:
+    # Heroku workaround for SQLAlchemy 1.4.x
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+else:
+    app.logger.error("DATABASE_URL is not set.")
+    database_url = 'sqlite:///planner.db'  # Fallback for local development
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
+try:
+    db = SQLAlchemy(app)
+    migrate = Migrate(app, db)
+except Exception as e:
+    app.logger.error(f"Error initializing database: {str(e)}")
+    raise
 
 class FamilyMember(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -47,9 +67,15 @@ def init_db():
 
 @app.route('/')
 def index():
-    family_members = FamilyMember.query.all()
-    return render_template('index.html', family_members=family_members)
-
+    try:
+        # Test database connection
+        db.session.execute('SELECT 1')
+        family_members = FamilyMember.query.all()
+        return render_template('index.html', family_members=family_members)
+    except Exception as e:
+        app.logger.error(f"Database connection error: {str(e)}")
+        return "Database connection error. Please check the logs.", 500
+        
 @app.route('/settings')
 def settings():
     family_members = FamilyMember.query.all()
