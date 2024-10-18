@@ -7,22 +7,25 @@
 <h1>Family Planner Settings</h1>
 
 <h2>Family Members</h2>
-<ul>
+<ul id="family-members-list">
     {% for member in family_members %}
-    <li>
+    <li id="member-{{ member.id }}">
         {{ member.name }}
-        <form action="{{ url_for('remove_family_member', member_id=member.id) }}" method="post" style="display: inline;">
-            <button type="submit" onclick="return confirm('Are you sure you want to remove this family member?');">Remove</button>
-        </form>
+        <button onclick="removeFamilyMember({{ member.id }}, '{{ member.name }}')">Remove</button>
     </li>
     {% endfor %}
 </ul>
+
+<div id="message" style="display: none;"></div>
 
 <h3>Add New Family Member</h3>
 <form action="{{ url_for('add_family_member') }}" method="post">
     <input type="text" name="name" required placeholder="Enter name">
     <button type="submit">Add Family Member</button>
 </form>
+
+
+
 
 <h3>Import/Export CSV</h3>
 <form id="csv-form" action="{{ url_for('import_csv') }}" method="post" enctype="multipart/form-data">
@@ -40,6 +43,36 @@
 <a href="{{ url_for('index') }}">Back to Planner</a>
 
 <script>
+    function removeFamilyMember(memberId, memberName) {
+        if (confirm(`Are you sure you want to remove ${memberName} and all associated entries? This action cannot be undone.`)) {
+            fetch(`/remove_family_member/${memberId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                const messageDiv = document.getElementById('message');
+                messageDiv.style.display = 'block';
+                if (data.success) {
+                    messageDiv.textContent = data.message;
+                    messageDiv.style.color = 'green';
+                    document.getElementById(`member-${memberId}`).remove();
+                } else {
+                    messageDiv.textContent = `Error: ${data.error}`;
+                    messageDiv.style.color = 'red';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const messageDiv = document.getElementById('message');
+                messageDiv.style.display = 'block';
+                messageDiv.textContent = 'An error occurred while removing the family member.';
+                messageDiv.style.color = 'red';
+            });
+        }
+    }
     document.getElementById('csv-form').addEventListener('submit', function(e) {
         e.preventDefault();
         const formData = new FormData(this);

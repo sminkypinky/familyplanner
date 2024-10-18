@@ -2,6 +2,7 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from sqlalchemy.orm import relationship
 from datetime import datetime, timedelta
 import csv
 import io
@@ -14,6 +15,7 @@ migrate = Migrate(app, db)
 class FamilyMember(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+    entries = relationship("PlannerEntry", back_populates="family_member", cascade="all, delete-orphan")
 
 class PlannerEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -24,7 +26,7 @@ class PlannerEntry(db.Model):
     plans = db.Column(db.String(200))
     family_plans = db.Column(db.String(200))
     family_member_id = db.Column(db.Integer, db.ForeignKey('family_member.id'), nullable=False)
-    family_member = db.relationship('FamilyMember', backref=db.backref('entries', lazy=True))
+    family_member = relationship("FamilyMember", back_populates="entries")
 
 @app.route('/')
 def index():
@@ -48,9 +50,14 @@ def add_family_member():
 @app.route('/remove_family_member/<int:member_id>', methods=['POST'])
 def remove_family_member(member_id):
     member = FamilyMember.query.get_or_404(member_id)
-    db.session.delete(member)
-    db.session.commit()
-    return redirect(url_for('settings'))
+    
+    try:
+        db.session.delete(member)
+        db.session.commit()
+        return jsonify({'success': True, 'message': f'Family member {member.name} and all associated entries have been removed.'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/get_week', methods=['POST'])
 def get_week():
