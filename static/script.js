@@ -16,6 +16,10 @@ function hideSpinner() {
     document.getElementById('spinner').style.display = 'none';
 }
 
+function getCurrentFamilyMemberId() {
+    return document.getElementById('family-member-select').value;
+}
+
 function createWeekTable(weekData, isCurrentWeek = false) {
     const table = document.createElement('table');
     if (isCurrentWeek) {
@@ -146,7 +150,8 @@ function saveEntry(inputElement) {
     showSpinner();
     const data = {
         date: inputElement.dataset.date,
-        [inputElement.dataset.field]: inputElement.value
+        [inputElement.dataset.field]: inputElement.value,
+        family_member_id: getCurrentFamilyMemberId()
     };
 
     fetch('/save_entry', {
@@ -183,7 +188,10 @@ function loadWeek(startDate, prepend = false, isCurrentWeek = false) {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ start_date: formatDate(startDate) }),
+        body: JSON.stringify({ 
+            start_date: formatDate(startDate),
+            family_member_id: getCurrentFamilyMemberId()
+        }),
     })
     .then(response => response.json())
     .then(data => {
@@ -194,14 +202,6 @@ function loadWeek(startDate, prepend = false, isCurrentWeek = false) {
         } else {
             document.getElementById('planner').appendChild(weekTable);
         }
-        // Recalculate heights for all textareas in the new week
-        weekTable.querySelectorAll('textarea').forEach(textarea => {
-            autoResize.call(textarea);
-        });
-        // Update location styles for all inputs in the new week
-        weekTable.querySelectorAll('input[type="text"]').forEach(input => {
-            updateLocationStyle.call(input);
-        });
         hideSpinner();
         return weekTable;
     })
@@ -242,8 +242,7 @@ function goToToday() {
     }
 }
 
-document.getElementById('content').addEventListener('scroll', loadMoreWeeks);
-document.getElementById('go-to-today').addEventListener('click', goToToday);
+
 
 async function initialLoad() {
     const weeks = [];
@@ -264,65 +263,19 @@ async function initialLoad() {
     }
 }
 
-initialLoad();
+
 
 document.addEventListener('DOMContentLoaded', function() {
     
+    initialLoad();
 
-    document.getElementById('import-csv').addEventListener('click', function() {
-        document.getElementById('csv-file').click();
+    document.getElementById('content').addEventListener('scroll', loadMoreWeeks);
+    document.getElementById('go-to-today').addEventListener('click', goToToday);
+    
+    document.getElementById('family-member-select').addEventListener('change', function() {
+        document.getElementById('planner').innerHTML = '';
+        initialLoad();
     });
-
-    document.getElementById('csv-file').addEventListener('change', function(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const formData = new FormData();
-            formData.append('file', file);
-
-            showSpinner();
-            fetch('/import_csv', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('CSV imported successfully!');
-                    location.reload(); // Reload the page to reflect the new data
-                } else {
-                    alert('Error importing CSV: ' + data.error);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while importing the CSV.');
-            })
-            .finally(() => {
-                hideSpinner();
-            });
-        }
-    });
-});
-
-document.getElementById('showStatsBtn').addEventListener('click', function() {
-    fetch('/api/schedule-stats')
-        .then(response => response.json())
-        .then(data => {
-            let content = '';
-            for (let period in data) {
-                content += `<h3>${period.charAt(0).toUpperCase() + period.slice(1)}</h3>`;
-                content += `<p>AM (SK): ${data[period].AM}%</p>`;
-                content += `<p>PM (SK): ${data[period].PM}%</p>`;
-                content += `<p>Overnight (SK): ${data[period].Overnight}%</p>`;
-            }
-            document.getElementById('statsContent').innerHTML = content;
-            document.getElementById('statsModal').style.display = 'block';
-        })
-        .catch(error => console.error('Error:', error));
-});
-
-document.querySelector('.close').addEventListener('click', function() {
-    document.getElementById('statsModal').style.display = 'none';
 });
 
 window.onclick = function(event) {

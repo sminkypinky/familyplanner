@@ -13,14 +13,23 @@
     <div id="status-bar">
         <div>
             <button id="go-to-today">Go to Today</button>
+            <select id="family-member-select">
+                {% for member in family_members %}
+                <option value="{{ member.id }}">{{ member.name }}</option>
+                {% endfor %}
+            </select>
             <input type="file" id="csv-file" accept=".csv" style="display: none;">
-            <button id="import-csv">Import CSV</button>
+            <a href="{{ url_for('settings') }}" id="settings-button"><i class="fas fa-cog"></i></a>
         </div>
         <div id="spinner"></div>
     </div>
     
     <div id="content">
         {% block content %}{% endblock %}
+    </div>
+    
+    <div id="footer">
+        &copy; 2024 Family Planner
     </div>
 
     <div id="popup" class="popup">
@@ -31,10 +40,6 @@
                 <button id="popup-save">Save</button>
             </div>
         </div>
-    </div>
-    
-    <div id="footer">
-        &copy; 2024 Family Planner
     </div>
     
     {% block scripts %}{% endblock %}
