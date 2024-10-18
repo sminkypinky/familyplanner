@@ -278,11 +278,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-window.addEventListener('resize', () => {
-    const isMobile = window.innerWidth <= 768;
-    const planner = document.getElementById('planner');
-    if (planner) {
-        planner.innerHTML = '';
-        initialLoad();
-    }
-});
