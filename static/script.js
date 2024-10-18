@@ -28,6 +28,8 @@ function createWeekTable(weekData, isCurrentWeek = false) {
         headerRow.appendChild(th);
     });
 
+    const isMobile = window.innerWidth <= 768;
+
     weekData.forEach(day => {
         const row = table.insertRow();
         const date = new Date(day.date);
@@ -38,35 +40,82 @@ function createWeekTable(weekData, isCurrentWeek = false) {
         }
 
         const dateCell = row.insertCell();
+        dateCell.classList.add('date-cell');
         dateCell.textContent = `${date.toLocaleDateString('en-US', { weekday: 'short' })} ${date.getDate()}/${date.getMonth() + 1}`;
 
         ['am', 'pm', 'overnight', 'plans', 'family_plans'].forEach(field => {
             const cell = row.insertCell();
-            let input;
-            if (field === 'plans' || field === 'family_plans') {
-                input = document.createElement('textarea');
-                input.rows = 1;
-                input.addEventListener('input', autoResize);
-            } else {
-                input = document.createElement('input');
-                input.type = 'text';
-                input.addEventListener('input', updateLocationStyle);
-            }
-            input.value = day[field];
-            input.dataset.field = field;
-            input.dataset.date = day.date;
-            input.addEventListener('change', (event) => saveEntry(event.target));
-            cell.appendChild(input);
+            cell.classList.add(`${field}-cell`);
 
-            if (input.tagName.toLowerCase() === 'textarea') {
-                setTimeout(() => autoResize.call(input), 0);
+            if (isMobile && (field === 'plans' || field === 'family_plans')) {
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-edit edit-icon';
+                if (day[field] && day[field].trim() !== '') {
+                    icon.classList.add('has-content');
+                }
+                icon.addEventListener('click', () => showPopup(day.date, field, day[field]));
+                cell.appendChild(icon);
             } else {
-                updateLocationStyle.call(input);
+                let input;
+                if (field === 'plans' || field === 'family_plans') {
+                    input = document.createElement('textarea');
+                    input.rows = 1;
+                    input.addEventListener('input', autoResize);
+                } else {
+                    input = document.createElement('input');
+                    input.type = 'text';
+                    input.addEventListener('input', updateLocationStyle);
+                }
+                input.value = day[field] || '';
+                input.dataset.field = field;
+                input.dataset.date = day.date;
+                input.addEventListener('change', (event) => saveEntry(event.target));
+                cell.appendChild(input);
+
+                if (input.tagName.toLowerCase() === 'textarea') {
+                    setTimeout(() => autoResize.call(input), 0);
+                } else {
+                    updateLocationStyle.call(input);
+                }
             }
         });
     });
 
     return table;
+}
+
+function showPopup(date, field, value) {
+    const popup = document.getElementById('popup');
+    const textarea = document.getElementById('popup-textarea');
+    const saveButton = document.getElementById('popup-save');
+    const cancelButton = document.getElementById('popup-cancel');
+
+    textarea.value = value || '';
+    popup.style.display = 'block';
+
+    saveButton.onclick = () => {
+        saveEntry({ dataset: { date, field }, value: textarea.value });
+        popup.style.display = 'none';
+        updateIconColor(date, field, textarea.value);
+    };
+
+    cancelButton.onclick = () => {
+        popup.style.display = 'none';
+    };
+}
+
+function updateIconColor(date, field, value) {
+    const cell = document.querySelector(`td.${field}-cell[data-date="${date}"]`);
+    if (cell) {
+        const icon = cell.querySelector('.edit-icon');
+        if (icon) {
+            if (value && value.trim() !== '') {
+                icon.classList.add('has-content');
+            } else {
+                icon.classList.remove('has-content');
+            }
+        }
+    }
 }
 
 function autoResize() {
@@ -263,3 +312,12 @@ window.onclick = function(event) {
         document.getElementById('statsModal').style.display = 'none';
     }
 }
+
+window.addEventListener('resize', () => {
+    const isMobile = window.innerWidth <= 768;
+    const planner = document.getElementById('planner');
+    if (planner) {
+        planner.innerHTML = '';
+        initialLoad();
+    }
+});

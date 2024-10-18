@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Family Planner{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -22,11 +23,13 @@
         {% block content %}{% endblock %}
     </div>
 
-    <div id="statsModal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Schedule Statistics</h2>
-            <div id="statsContent"></div>
+    <div id="popup" class="popup">
+        <div class="popup-content">
+            <textarea id="popup-textarea"></textarea>
+            <div class="popup-buttons">
+                <button id="popup-cancel">Cancel</button>
+                <button id="popup-save">Save</button>
+            </div>
         </div>
     </div>
     
