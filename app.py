@@ -1,4 +1,5 @@
 # app.py
+import os
 from flask import Flask, render_template, request, jsonify, redirect, url_for, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -9,6 +10,13 @@ import io
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///planner.db'
+
+# Ensure the instance folder exists
+try:
+    os.makedirs(app.instance_path)
+except OSError:
+    pass
+
 db = SQLAlchemy(app)
 
 class FamilyMember(db.Model):
@@ -29,6 +37,7 @@ class PlannerEntry(db.Model):
 
 migrate = Migrate(app, db)
 
+@app.cli.command("init-db")
 def init_db():
     with app.app_context():
         db.create_all()
@@ -40,10 +49,6 @@ def init_db():
             print('Created default family member.')
         else:
             print('Database already initialized.')
-
-@app.before_first_request
-def create_tables():
-    init_db()
 
 @app.route('/')
 def index():
