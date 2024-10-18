@@ -46,6 +46,9 @@ function createWeekTable(weekData, isCurrentWeek = false) {
         ['am', 'pm', 'overnight', 'plans', 'family_plans'].forEach(field => {
             const cell = row.insertCell();
             cell.classList.add(`${field}-cell`);
+            cell.dataset.date = day.date;
+            cell.dataset.field = field;
+            cell.dataset.value = day[field] || '';
 
             if (isMobile && (field === 'plans' || field === 'family_plans')) {
                 const icon = document.createElement('i');
@@ -53,7 +56,7 @@ function createWeekTable(weekData, isCurrentWeek = false) {
                 if (day[field] && day[field].trim() !== '') {
                     icon.classList.add('has-content');
                 }
-                icon.addEventListener('click', () => showPopup(day.date, field, day[field]));
+                icon.addEventListener('click', () => showPopup(day.date, field));
                 cell.appendChild(icon);
             } else {
                 let input;
@@ -84,19 +87,25 @@ function createWeekTable(weekData, isCurrentWeek = false) {
     return table;
 }
 
-function showPopup(date, field, value) {
+function showPopup(date, field) {
     const popup = document.getElementById('popup');
     const textarea = document.getElementById('popup-textarea');
     const saveButton = document.getElementById('popup-save');
     const cancelButton = document.getElementById('popup-cancel');
 
-    textarea.value = value || '';
+    const cell = document.querySelector(`td.${field}-cell[data-date="${date}"]`);
+    const currentValue = cell ? cell.dataset.value || '' : '';
+
+    textarea.value = currentValue;
     popup.style.display = 'block';
 
     saveButton.onclick = () => {
-        saveEntry({ dataset: { date, field }, value: textarea.value });
+        const newValue = textarea.value;
+        saveEntry({
+            dataset: { date, field },
+            value: newValue
+        });
         popup.style.display = 'none';
-        updateIconColor(date, field, textarea.value);
     };
 
     cancelButton.onclick = () => {
@@ -151,11 +160,20 @@ function saveEntry(inputElement) {
     .then(data => {
         console.log('Entry saved:', data);
         hideSpinner();
+        updateCellData(inputElement.dataset.date, inputElement.dataset.field, inputElement.value);
+        updateIconColor(inputElement.dataset.date, inputElement.dataset.field, inputElement.value);
     })
     .catch((error) => {
         console.error('Error:', error);
         hideSpinner();
     });
+}
+
+function updateCellData(date, field, value) {
+    const cell = document.querySelector(`td.${field}-cell[data-date="${date}"]`);
+    if (cell) {
+        cell.dataset.value = value;
+    }
 }
 
 function loadWeek(startDate, prepend = false, isCurrentWeek = false) {
