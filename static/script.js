@@ -263,11 +263,11 @@ async function initialLoad() {
     }
 }
 
-
+initialLoad();
 
 document.addEventListener('DOMContentLoaded', function() {
     
-    initialLoad();
+  
 
     document.getElementById('content').addEventListener('scroll', loadMoreWeeks);
     document.getElementById('go-to-today').addEventListener('click', goToToday);
