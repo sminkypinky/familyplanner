@@ -278,12 +278,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-window.onclick = function(event) {
-    if (event.target == document.getElementById('statsModal')) {
-        document.getElementById('statsModal').style.display = 'none';
-    }
-}
-
 window.addEventListener('resize', () => {
     const isMobile = window.innerWidth <= 768;
     const planner = document.getElementById('planner');
