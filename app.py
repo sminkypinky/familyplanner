@@ -69,8 +69,7 @@ def init_db():
 @app.route('/')
 def index():
     try:
-        # Test database connection
-        db.session.execute('SELECT 1')
+
         family_members = FamilyMember.query.all()
         return render_template('index.html', family_members=family_members)
     except Exception as e:
