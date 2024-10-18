@@ -1,2 +1,3 @@
 __pycache__/app.cpython-311.pyc
 migrations/__pycache__/env.cpython-311.pyc
+instance/planner.db
