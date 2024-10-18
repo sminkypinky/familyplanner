@@ -20,7 +20,7 @@ app.logger.setLevel(logging.ERROR)
 database_url = os.environ.get('DATABASE_URL')
 if database_url:
     # Heroku workaround for SQLAlchemy 1.4.x
-    database_url = database_url#.replace('postgres://', 'postgresql://', 1)
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
 else:
     app.logger.error("DATABASE_URL is not set.")
     database_url = 'sqlite:///planner.db'  # Fallback for local development
