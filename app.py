@@ -10,7 +10,6 @@ import io
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///planner.db'
 db = SQLAlchemy(app)
-migrate = Migrate(app, db)
 
 class FamilyMember(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -27,6 +26,24 @@ class PlannerEntry(db.Model):
     family_plans = db.Column(db.String(200))
     family_member_id = db.Column(db.Integer, db.ForeignKey('family_member.id'), nullable=False)
     family_member = relationship("FamilyMember", back_populates="entries")
+
+migrate = Migrate(app, db)
+
+def init_db():
+    with app.app_context():
+        db.create_all()
+        # Check if there are any family members
+        if FamilyMember.query.first() is None:
+            default_member = FamilyMember(name="Default Family Member")
+            db.session.add(default_member)
+            db.session.commit()
+            print('Created default family member.')
+        else:
+            print('Database already initialized.')
+
+@app.before_first_request
+def create_tables():
+    init_db()
 
 @app.route('/')
 def index():

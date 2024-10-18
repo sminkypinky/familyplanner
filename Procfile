@@ -1,2 +1,2 @@
-web: mkdir -p instance && gunicorn app:app
+web: gunicorn app:app
 release: flask db upgrade
